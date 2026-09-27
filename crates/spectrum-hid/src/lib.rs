@@ -315,7 +315,11 @@ impl HidTransport for MockHidTransport {
                 self.current_polling = PollingRate::from_hw_code(data[2])?;
             }
             cmd::SET_LED => {
-                let mode_num = (data[3] >> 4) & 0x0f;
+                let mode_num = if (data[2] & 0x7f) == 14 {
+                    14
+                } else {
+                    (data[3] >> 4) & 0x0f
+                };
                 self.current_rgb_mode = RgbMode::from_u8(mode_num)?;
             }
             cmd::ACCESS_REGISTER => {

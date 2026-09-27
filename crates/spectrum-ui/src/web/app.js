@@ -238,7 +238,11 @@ function renderRgb(rgb) {
   document.getElementById("symmetryToggle").checked = !!rgb.symmetry;
 
   // Visual schematic glow update
-  updateVisualRgb(hexColor, rgb.brightness + 1);
+  if (rgb.mode === "LED Off") {
+    updateVisualRgb("#000000", 0);
+  } else {
+    updateVisualRgb(hexColor, rgb.brightness + 1);
+  }
 }
 
 function updateVisualRgb(color, brightness) {
@@ -248,6 +252,16 @@ function updateVisualRgb(color, brightness) {
   const stripR = document.getElementById("rgbStripRight");
   const wheel = document.getElementById("schematicWheel");
   const logo = document.getElementById("schematicLogo");
+
+  if (brightness === 0 || color === "#000000") {
+    halo.style.opacity = "0";
+    ambient.style.opacity = "0";
+    stripL.style.stroke = "#182030";
+    stripR.style.stroke = "#182030";
+    wheel.style.stroke = "#182030";
+    logo.style.fill = "#182030";
+    return;
+  }
 
   const opacity = (brightness / 5) * 0.7;
 
@@ -407,6 +421,15 @@ function setupEventListeners() {
     }
   });
 
+  // LED OFF Quick Buttons
+  const handleLedOff = async () => {
+    await turnLedOff();
+  };
+  const btnQuick = document.getElementById("btnQuickLedOff");
+  if (btnQuick) btnQuick.addEventListener("click", handleLedOff);
+  const btnHeader = document.getElementById("btnHeaderLedOff");
+  if (btnHeader) btnHeader.addEventListener("click", handleLedOff);
+
   // Modal Close & Skip
   document.getElementById("modalCloseBtn").addEventListener("click", closeReplugModal);
   document.getElementById("btnSkipReplug").addEventListener("click", closeReplugModal);
@@ -441,6 +464,36 @@ async function setDpi(dpi) {
   showToast(`Sensor resolution set to ${dpi} DPI`);
 }
 
+async function turnLedOff() {
+  const select = document.getElementById("rgbModeSelect");
+  if (select) select.value = "LED Off";
+  document.getElementById("currentModeTag").textContent = "LED Off Mode";
+  document.getElementById("brightnessSlider").value = 1;
+  document.getElementById("brightnessValText").textContent = "Level 1";
+  document.getElementById("rgbColorInput").value = "#000000";
+  document.getElementById("rgbHexInput").value = "#000000";
+
+  updateVisualRgb("#000000", 0);
+
+  try {
+    await postJson("/api/led-off", {});
+    await postJson("/api/save", {});
+    showToast("✔ Mouse RGB LEDs turned completely OFF");
+  } catch (err) {
+    console.error("LED off error:", err);
+    await postJson("/api/rgb", {
+      mode: "LED Off",
+      color: "#000000",
+      brightness: 0,
+      speed: 0,
+      direction: false,
+      symmetry: true
+    });
+    await postJson("/api/save", {});
+    showToast("✔ Mouse RGB LEDs turned completely OFF");
+  }
+}
+
 async function applyRgbForm() {
   const mode = document.getElementById("rgbModeSelect").value;
   const color = document.getElementById("rgbColorInput").value;
@@ -458,7 +511,11 @@ async function applyRgbForm() {
     symmetry
   };
 
-  updateVisualRgb(color, brightness + 1);
+  if (mode === "LED Off") {
+    updateVisualRgb("#000000", 0);
+  } else {
+    updateVisualRgb(color, brightness + 1);
+  }
   await postJson("/api/rgb", payload);
   document.getElementById("currentModeTag").textContent = `${mode} Mode`;
 }

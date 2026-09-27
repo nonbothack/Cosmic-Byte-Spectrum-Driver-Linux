@@ -374,8 +374,16 @@ impl<T: HidTransport> SpectrumDevice for SpectrumController<T> {
 
     fn set_rgb(&mut self, config: RgbConfig) -> Result<(), CoreError> {
         // 1. Send Command 0x14: Program active LED color nibbles into mouse hardware color table
-        let led_pkt = PacketEncoder::encode_dpi_stage_led(0, &config.color)?;
-        self.transport.send_feature_report(led_pkt.as_bytes())?;
+        if config.mode == RgbMode::Off {
+            for stage in 0..6 {
+                let led_pkt = PacketEncoder::encode_dpi_stage_led(stage, &RgbColor::new(0, 0, 0))?;
+                self.transport.send_feature_report(led_pkt.as_bytes())?;
+                std::thread::sleep(std::time::Duration::from_millis(2));
+            }
+        } else {
+            let led_pkt = PacketEncoder::encode_dpi_stage_led(0, &config.color)?;
+            self.transport.send_feature_report(led_pkt.as_bytes())?;
+        }
 
         // Stabilization pause (matches OEM driver timing)
         std::thread::sleep(std::time::Duration::from_millis(5));

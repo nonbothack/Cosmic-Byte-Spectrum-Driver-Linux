@@ -536,6 +536,19 @@ impl PacketEncoder {
     /// Byte 6: (custom_color >> 8) & 0x03
     /// Byte 7: custom_color & 0xFF
     pub fn encode_rgb(config: &RgbConfig) -> Packet {
+        if config.mode == RgbMode::Off {
+            let mut buf = [0u8; REPORT_LEN];
+            buf[0] = REPORT_ID;
+            buf[1] = cmd::SET_LED;
+            buf[2] = 0x8e; // Capture 04: (1 << 7) | 14
+            buf[3] = 0x13; // Capture 04
+            buf[4] = 0x00;
+            buf[5] = 0x00; // Brightness 0
+            buf[6] = 0x00;
+            buf[7] = 0x00;
+            return Packet(buf);
+        }
+
         let mut buf = [0u8; REPORT_LEN];
         buf[0] = REPORT_ID;
         buf[1] = cmd::SET_LED;
@@ -1030,10 +1043,10 @@ mod tests {
             symmetry: true,
         };
         let pkt = PacketEncoder::encode_rgb(&config);
-        // Byte 3 has (14 << 4) | 3 = 0xE3, Byte 5 has 0 (brightness extinguished)
+        // Matches hardware Capture 04: [0x07, 0x13, 0x8E, 0x13, 0x00, 0x00, 0x00, 0x00]
         assert_eq!(
             pkt.as_bytes(),
-            &[0x07, 0x13, 0xff, 0xe3, 0xcb, 0x00, 0x03, 0xff]
+            &[0x07, 0x13, 0x8e, 0x13, 0x00, 0x00, 0x00, 0x00]
         );
     }
 }

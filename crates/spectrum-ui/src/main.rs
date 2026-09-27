@@ -342,6 +342,25 @@ fn handle_client(mut stream: TcpStream, dev_lock: DeviceLock) -> Result<()> {
                 )?;
             }
         }
+        ("POST", "/api/led-off") => {
+            let config = RgbConfig {
+                mode: RgbMode::Off,
+                color: RgbColor::new(0, 0, 0),
+                brightness: 0,
+                speed: 0,
+                direction: false,
+                symmetry: true,
+            };
+            match with_device(&dev_lock, |ctrl| ctrl.set_rgb(config.clone())) {
+                Ok(()) => {
+                    send_response(&mut stream, 200, "application/json", b"{\"status\":\"ok\"}")?;
+                }
+                Err(err) => {
+                    let err_json = serde_json::to_vec(&serde_json::json!({ "error": err }))?;
+                    send_response(&mut stream, 500, "application/json", &err_json)?;
+                }
+            }
+        }
         ("POST", "/api/button") => {
             #[derive(serde::Deserialize)]
             struct BtnReq {

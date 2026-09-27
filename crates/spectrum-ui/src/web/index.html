@@ -159,7 +159,16 @@
               </span>
               <h2>Chroma RGB Lighting (16 Modes)</h2>
             </div>
-            <span class="current-mode-tag" id="currentModeTag">Neon Mode</span>
+            <div class="header-actions">
+              <button id="btnHeaderLedOff" class="btn-led-off-header" title="Turn OFF physical mouse RGB completely">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                  <line x1="12" y1="2" x2="12" y2="12"></line>
+                </svg>
+                <span>LED OFF</span>
+              </button>
+              <span class="current-mode-tag" id="currentModeTag">Neon Mode</span>
+            </div>
           </div>
 
           <div class="rgb-body">
@@ -243,6 +252,17 @@
                   <span class="switch-slider"></span>
                   <span class="switch-label">Symmetry Flow</span>
                 </label>
+              </div>
+
+              <!-- Quick LED OFF Button -->
+              <div class="rgb-action-row">
+                <button id="btnQuickLedOff" class="btn-led-off" title="Extinguish all RGB LEDs completely">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                    <line x1="12" y1="2" x2="12" y2="12"></line>
+                  </svg>
+                  <span>LED OFF</span>
+                </button>
               </div>
             </div>
           </div>
