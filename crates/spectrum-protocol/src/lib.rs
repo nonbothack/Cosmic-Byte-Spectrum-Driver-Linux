@@ -540,10 +540,18 @@ impl PacketEncoder {
         buf[0] = REPORT_ID;
         buf[1] = cmd::SET_LED;
 
+        // Byte 2: User color enable (bit 7) and active color bitmask (bits 0..6)
+        // Disassembled OEM binary at VA 0x00429de0:
+        // eax = (ds:0x662058 << 7) + arg0; Byte 2 = al
+        // Multicolored cycles enable all 7 colors (0x7F).
+        // 0x80 | 0x7F = 0xFF activates the full hardware LED illumination loop.
         let user_color_en = 1u8;
-        let mode = config.mode as u8;
-        buf[2] = (user_color_en << 7) | (mode & 0x7f);
+        let color_mask = 0x7fu8;
+        buf[2] = (user_color_en << 7) | (color_mask & 0x7f);
 
+        // Byte 3: Direction (bit 7), Mode (bits 4..7), Scolor (bit 3), Speed (bits 0..2)
+        // Disassembled OEM binary at VA 0x00429de0:
+        // (direction << 7) | ((mode & 0x0F) << 4) | (scolor << 3) | (speed & 0x07)
         let dir = if config.direction { 1u8 } else { 0u8 };
         let sym = if config.symmetry { 1u8 } else { 0u8 };
         let scolor = match config.mode {
@@ -551,15 +559,23 @@ impl PacketEncoder {
             _ => 0u8,
         };
         let speed = (config.speed.min(4)) & 0x07;
-        buf[3] = (dir << 7) | (sym << 4) | (scolor << 3) | speed;
+        let mode_val = config.mode as u8;
+        buf[3] = (dir << 7) | ((mode_val & 0x0f) << 4) | ((scolor & 0x01) << 3) | speed;
 
+        // Byte 4: flag1 (bit 7), symmetry (bit 6), direction_hi (bits 4..5), color_index (bits 0..3)
+        // Disassembled OEM binary at VA 0x00429de0:
+        // (user_col << 7) | (symmetry << 6) | ((direction << 4) & 0x30) | (color_index & 0x0F)
         let flag1 = 1u8; // User color enable flag
-        let flag2 = sym; // Symmetry flag
         let dir_hi = (dir << 4) & 0x30;
         let color_index = 0x0Bu8; // Matches OEM driver active index
-        buf[4] = (flag1 << 7) | (flag2 << 6) | dir_hi | (color_index & 0x0f);
+        buf[4] = (flag1 << 7) | (sym << 6) | dir_hi | (color_index & 0x0f);
 
-        buf[5] = (config.brightness.min(4)) & 0x07;
+        // Byte 5: Brightness level (0..4). For Off mode, extinguish LEDs completely with brightness 0.
+        buf[5] = if config.mode == RgbMode::Off {
+            0
+        } else {
+            (config.brightness.min(4)) & 0x07
+        };
 
         // Custom color field (Bytes 6 & 7):
         // Multicolored modes use full spectrum mask 0x3FFF ([0x03, 0xFF])
@@ -982,7 +998,7 @@ mod tests {
         let pkt = PacketEncoder::encode_rgb(&config);
         assert_eq!(
             pkt.as_bytes(),
-            &[0x07, 0x13, 0x83, 0x1a, 0xcb, 0x03, 0x00, 0x02]
+            &[0x07, 0x13, 0xff, 0x3a, 0xcb, 0x03, 0x00, 0x02]
         );
     }
 
@@ -999,7 +1015,25 @@ mod tests {
         let pkt = PacketEncoder::encode_rgb(&config);
         assert_eq!(
             pkt.as_bytes(),
-            &[0x07, 0x13, 0x87, 0x13, 0xcb, 0x02, 0x03, 0xff]
+            &[0x07, 0x13, 0xff, 0x73, 0xcb, 0x02, 0x03, 0xff]
+        );
+    }
+
+    #[test]
+    fn test_encode_rgb_off() {
+        let config = RgbConfig {
+            mode: RgbMode::Off,
+            brightness: 3,
+            speed: 3,
+            color: RgbColor::new(0, 0, 0),
+            direction: false,
+            symmetry: true,
+        };
+        let pkt = PacketEncoder::encode_rgb(&config);
+        // Byte 3 has (14 << 4) | 3 = 0xE3, Byte 5 has 0 (brightness extinguished)
+        assert_eq!(
+            pkt.as_bytes(),
+            &[0x07, 0x13, 0xff, 0xe3, 0xcb, 0x00, 0x03, 0xff]
         );
     }
 }

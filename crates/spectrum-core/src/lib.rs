@@ -378,16 +378,33 @@ impl<T: HidTransport> SpectrumDevice for SpectrumController<T> {
         self.transport.send_feature_report(led_pkt.as_bytes())?;
 
         // Stabilization pause (matches OEM driver timing)
-        std::thread::sleep(std::time::Duration::from_millis(10));
+        std::thread::sleep(std::time::Duration::from_millis(5));
 
-        // 2. Send Command 0x13: Configure RGB effect mode, speed, brightness, and flags
+        // 2. Synchronize EEPROM Chunk 0x18 Byte 4 (stores active RGB mode and speed)
+        // Disassembled from OEM binary at VA 0x0041bb64..0x0041bb89:
+        // Byte 4: 0x80 | ((mode & 0x07) << 4) | (scolor << 3) | (speed & 0x07)
+        // Note: Polling rate is stored in Byte 6, so reading and modifying preserves polling rate.
+        if let Ok(mut chunk_18) = self.transport.read_chunk(0x18, 8) {
+            if chunk_18.len() >= 8 {
+                let scolor = match config.mode {
+                    RgbMode::StaticLight | RgbMode::SingleBreath | RgbMode::MonoWater => 1u8,
+                    _ => 0u8,
+                };
+                let speed_code = (config.speed.min(4)) & 0x07;
+                let mode_code = (config.mode as u8) & 0x07;
+                chunk_18[4] = 0x80 | (mode_code << 4) | (scolor << 3) | speed_code;
+                let _ = self.transport.write_chunk(0x18, &chunk_18);
+            }
+        }
+
+        // 3. Send Command 0x13: Configure RGB effect mode, speed, brightness, and flags
         let rgb_pkt = PacketEncoder::encode_rgb(&config);
         self.transport.send_feature_report(rgb_pkt.as_bytes())?;
 
         // Stabilization pause
-        std::thread::sleep(std::time::Duration::from_millis(10));
+        std::thread::sleep(std::time::Duration::from_millis(5));
 
-        // 3. Send Command 0x20: Save / commit configuration into onboard non-volatile EEPROM/flash
+        // 4. Send Command 0x20: Save / commit configuration into onboard non-volatile EEPROM/flash
         let save_pkt = PacketEncoder::encode_save();
         self.transport.send_feature_report(save_pkt.as_bytes())?;
 
