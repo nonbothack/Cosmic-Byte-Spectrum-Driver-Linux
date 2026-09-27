@@ -45,7 +45,7 @@ cd Cosmic-Byte-Spectrum-Driver-Linux
 
 ## 💻 CLI Quick Controls (`spectrumctl`)
 
-Prefer configuring via terminal? It only takes a single command:
+Prefer configuring via the terminal? Quick command examples:
 
 ```bash
 # Read all current mouse settings
