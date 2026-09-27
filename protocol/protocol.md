@@ -66,7 +66,7 @@ Byte 0: 0x07 (Report ID)
 Byte 1: 0x13 (SET_LED)
 Byte 2: (user_color_en << 7) | (mode & 0x7F)
 Byte 3: (direction << 7) | (symmetry << 4) | (scolor << 3) | (speed & 0x07)
-Byte 4: (flag1 << 7) | (flag2 << 6) | (brightness_hi << 4) | (color_index & 0x0F)
+Byte 4: (flag1 << 7) | (symmetry << 6) | ((direction << 4) & 0x30) | (color_index & 0x0F)
 Byte 5: brightness & 0x07
 Byte 6: (custom_color >> 8) & 0x03
 Byte 7: custom_color & 0xFF

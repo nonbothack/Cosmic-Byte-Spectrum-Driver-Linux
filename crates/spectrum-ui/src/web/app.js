@@ -394,6 +394,23 @@ function setupEventListeners() {
     }
   });
 
+  // Apply & Launch Hardware Replug Guide
+  document.getElementById("btnApplyReplug").addEventListener("click", async () => {
+    const btn = document.getElementById("btnApplyReplug");
+    btn.disabled = true;
+    try {
+      await applyRgbForm();
+      await postJson("/api/save", {});
+      openReplugModal();
+    } finally {
+      setTimeout(() => { btn.disabled = false; }, 800);
+    }
+  });
+
+  // Modal Close & Skip
+  document.getElementById("modalCloseBtn").addEventListener("click", closeReplugModal);
+  document.getElementById("btnSkipReplug").addEventListener("click", closeReplugModal);
+
   // Sync from Mouse
   document.getElementById("btnSyncHardware").addEventListener("click", async () => {
     await refreshDevice();
@@ -471,4 +488,142 @@ function showToast(msg) {
   setTimeout(() => {
     t.classList.remove("show");
   }, 3000);
+}
+
+// Replug Workflow State
+let replugPollInterval = null;
+let replugCountdownTimer = null;
+
+function openReplugModal() {
+  const modal = document.getElementById("replugModal");
+  modal.classList.remove("hidden");
+  setReplugStep(2); // Step 1 is already complete (saved to flash), next is unplug
+  startReplugMonitor();
+}
+
+function closeReplugModal() {
+  const modal = document.getElementById("replugModal");
+  modal.classList.add("hidden");
+  if (replugPollInterval) {
+    clearInterval(replugPollInterval);
+    replugPollInterval = null;
+  }
+  if (replugCountdownTimer) {
+    clearInterval(replugCountdownTimer);
+    replugCountdownTimer = null;
+  }
+}
+
+function setReplugStep(step) {
+  const s1 = document.getElementById("step1");
+  const s2 = document.getElementById("step2");
+  const s3 = document.getElementById("step3");
+  const s4 = document.getElementById("step4");
+  const d1 = document.getElementById("div1");
+  const d2 = document.getElementById("div2");
+  const d3 = document.getElementById("div3");
+  const animBox = document.getElementById("modalAnimBox");
+  const usbIcon = document.getElementById("modalUsbIcon");
+  const countEl = document.getElementById("countdownNumber");
+  const instr = document.getElementById("modalInstruction");
+  const badge = document.getElementById("modalIconBadge");
+
+  // Reset states
+  [s1, s2, s3, s4].forEach(s => s.className = "step-item");
+  [d1, d2, d3].forEach(d => d.className = "step-divider");
+  badge.className = "modal-icon-badge";
+  animBox.className = "status-animation-box pulsing";
+  usbIcon.classList.remove("hidden");
+  countEl.classList.add("hidden");
+
+  if (step === 2) {
+    s1.classList.add("completed");
+    s2.classList.add("active");
+    d1.classList.add("active");
+    badge.classList.add("warning");
+    instr.textContent = "Please unplug your mouse USB cable from your computer now.";
+  } else if (step === 3) {
+    s1.classList.add("completed");
+    s2.classList.add("completed");
+    s3.classList.add("active");
+    d1.classList.add("active");
+    d2.classList.add("active");
+    badge.classList.add("warning");
+    usbIcon.classList.add("hidden");
+    countEl.classList.remove("hidden");
+  } else if (step === 3.5) {
+    s1.classList.add("completed");
+    s2.classList.add("completed");
+    s3.classList.add("active");
+    d1.classList.add("active");
+    d2.classList.add("active");
+    badge.classList.add("warning");
+    usbIcon.classList.remove("hidden");
+    countEl.classList.add("hidden");
+    instr.textContent = "Hardware discharged! Now plug the mouse USB cable back in.";
+  } else if (step === 4) {
+    s1.classList.add("completed");
+    s2.classList.add("completed");
+    s3.classList.add("completed");
+    s4.classList.add("active", "completed");
+    d1.classList.add("active");
+    d2.classList.add("active");
+    d3.classList.add("active");
+    badge.classList.add("success");
+    animBox.classList.remove("pulsing");
+    instr.textContent = "✔ Mouse reconnected! New hardware state active and synchronized.";
+  }
+}
+
+function startReplugMonitor() {
+  if (replugPollInterval) clearInterval(replugPollInterval);
+
+  let state = "waiting_unplug";
+
+  replugPollInterval = setInterval(async () => {
+    try {
+      const info = await fetch("/api/info").then(r => r.json());
+      const connected = !!info.connected;
+      updateStatus(connected, info.hidraw_path);
+
+      if (state === "waiting_unplug" && !connected) {
+        state = "counting";
+        setReplugStep(3);
+        let secondsLeft = 4;
+        const countEl = document.getElementById("countdownNumber");
+        const instr = document.getElementById("modalInstruction");
+        countEl.textContent = secondsLeft;
+        instr.textContent = `Mouse unplugged. Discharging hardware registers: ${secondsLeft}s...`;
+
+        replugCountdownTimer = setInterval(() => {
+          secondsLeft -= 1;
+          if (secondsLeft > 0) {
+            countEl.textContent = secondsLeft;
+            instr.textContent = `Mouse unplugged. Discharging hardware registers: ${secondsLeft}s...`;
+          } else {
+            clearInterval(replugCountdownTimer);
+            replugCountdownTimer = null;
+            state = "waiting_replug";
+            setReplugStep(3.5);
+          }
+        }, 1000);
+      } else if ((state === "waiting_replug" || state === "counting") && connected) {
+        if (replugCountdownTimer) {
+          clearInterval(replugCountdownTimer);
+          replugCountdownTimer = null;
+        }
+        state = "done";
+        clearInterval(replugPollInterval);
+        replugPollInterval = null;
+        setReplugStep(4);
+        await refreshDevice();
+        showToast("✔ Hardware reset complete! Active settings synchronized.");
+        setTimeout(() => {
+          closeReplugModal();
+        }, 1800);
+      }
+    } catch (e) {
+      console.warn("Poll check error:", e);
+    }
+  }, 500);
 }

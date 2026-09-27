@@ -184,8 +184,12 @@ The previous implementation suffered from the bug where "GUI reports 800 DPI, ph
   5. Send Command `0x20` (Commit to flash).
   6. Read back Feature Report `0x07` to confirm active DPI matches expected.
 - **To update RGB:**
-  1. Send Command `0x13` (RGB parameters).
-  2. Send Command `0x20` (Commit).
+  1. Send Command `0x14` (LED stage color setup with 4-bit inverted nibbles).
+  2. Short stabilization delay (10ms).
+  3. Send Command `0x13` (RGB mode, direction, symmetry, speed, brightness, and flags).
+  4. Short stabilization delay (10ms).
+  5. Send Command `0x20` (Commit to onboard flash).
+  6. Cold power cycle (USB unplug 4–5s and replug) activates new hardware state.
 - **To remap Buttons:**
   1. Send Command `0x10` for each button.
   2. Send Command `0x20` (Commit).

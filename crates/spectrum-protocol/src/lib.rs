@@ -225,11 +225,11 @@ impl RgbColor {
         format!("#{:02x}{:02x}{:02x}", self.r, self.g, self.b)
     }
 
-    /// Converts 8-bit channel to 4-bit nibble according to firmware algorithm
+    /// Converts 8-bit channel to 4-bit nibble according to firmware algorithm (VA 0x0042a370: (255 - component) / 16)
     pub fn to_nibbles(&self) -> (u8, u8, u8) {
-        let r_nib = ((255u16 - self.r as u16 + 8) / 16).min(15) as u8;
-        let g_nib = ((255u16 - self.g as u16 + 8) / 16).min(15) as u8;
-        let b_nib = ((255u16 - self.b as u16 + 8) / 16).min(15) as u8;
+        let r_nib = ((255u16 - self.r as u16) / 16).min(15) as u8;
+        let g_nib = ((255u16 - self.g as u16) / 16).min(15) as u8;
+        let b_nib = ((255u16 - self.b as u16) / 16).min(15) as u8;
         (r_nib, g_nib, b_nib)
     }
 
@@ -525,6 +525,16 @@ pub struct PacketEncoder;
 
 impl PacketEncoder {
     /// Builds Command 0x13: Set RGB lighting configuration
+    ///
+    /// Disassembled from OEM binary at VA 0x00429de0 & 0x0047ed30:
+    /// Byte 0: 0x07 (Report ID)
+    /// Byte 1: 0x13 (Opcode SET_LED)
+    /// Byte 2: (user_color_en << 7) | (mode & 0x7F)
+    /// Byte 3: (direction << 7) | (symmetry << 4) | (scolor << 3) | (speed & 0x07)
+    /// Byte 4: (flag1 << 7) | (symmetry << 6) | ((direction << 4) & 0x30) | (color_index & 0x0F)
+    /// Byte 5: brightness & 0x07
+    /// Byte 6: (custom_color >> 8) & 0x03
+    /// Byte 7: custom_color & 0xFF
     pub fn encode_rgb(config: &RgbConfig) -> Packet {
         let mut buf = [0u8; REPORT_LEN];
         buf[0] = REPORT_ID;
@@ -536,13 +546,33 @@ impl PacketEncoder {
 
         let dir = if config.direction { 1u8 } else { 0u8 };
         let sym = if config.symmetry { 1u8 } else { 0u8 };
+        let scolor = match config.mode {
+            RgbMode::StaticLight | RgbMode::SingleBreath | RgbMode::MonoWater => 1u8,
+            _ => 0u8,
+        };
         let speed = (config.speed.min(4)) & 0x07;
-        buf[3] = (dir << 7) | (sym << 4) | speed;
+        buf[3] = (dir << 7) | (sym << 4) | (scolor << 3) | speed;
 
-        buf[4] = 0x00;
+        let flag1 = 1u8; // User color enable flag
+        let flag2 = sym; // Symmetry flag
+        let dir_hi = (dir << 4) & 0x30;
+        let color_index = 0x0Bu8; // Matches OEM driver active index
+        buf[4] = (flag1 << 7) | (flag2 << 6) | dir_hi | (color_index & 0x0f);
+
         buf[5] = (config.brightness.min(4)) & 0x07;
-        buf[6] = 0x00;
-        buf[7] = 0x00;
+
+        // Custom color field (Bytes 6 & 7):
+        // Multicolored modes use full spectrum mask 0x3FFF ([0x03, 0xFF])
+        // Single color modes use 0x4002 ([0x00, 0x02]) matching OEM disassembled dispatch
+        let custom_color: u16 = match config.mode {
+            RgbMode::StaticLight
+            | RgbMode::SingleBreath
+            | RgbMode::MonoWater
+            | RgbMode::DpiBreathing => 0x4002,
+            _ => 0x3fff,
+        };
+        buf[6] = ((custom_color >> 8) & 0x03) as u8;
+        buf[7] = (custom_color & 0xff) as u8;
 
         Packet(buf)
     }
@@ -937,5 +967,39 @@ mod tests {
         assert_eq!(status.profile_index, 0);
         assert_eq!(status.eeprom_size_bytes, 4088);
         assert_eq!(status.signature, 0x3b);
+    }
+
+    #[test]
+    fn test_encode_rgb_static_light() {
+        let config = RgbConfig {
+            mode: RgbMode::StaticLight,
+            brightness: 3,
+            speed: 2,
+            color: RgbColor::new(255, 0, 0),
+            direction: false,
+            symmetry: true,
+        };
+        let pkt = PacketEncoder::encode_rgb(&config);
+        assert_eq!(
+            pkt.as_bytes(),
+            &[0x07, 0x13, 0x83, 0x1a, 0xcb, 0x03, 0x00, 0x02]
+        );
+    }
+
+    #[test]
+    fn test_encode_rgb_neon() {
+        let config = RgbConfig {
+            mode: RgbMode::Neon,
+            brightness: 2,
+            speed: 3,
+            color: RgbColor::new(0, 255, 255),
+            direction: false,
+            symmetry: true,
+        };
+        let pkt = PacketEncoder::encode_rgb(&config);
+        assert_eq!(
+            pkt.as_bytes(),
+            &[0x07, 0x13, 0x87, 0x13, 0xcb, 0x02, 0x03, 0xff]
+        );
     }
 }

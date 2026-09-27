@@ -373,10 +373,24 @@ impl<T: HidTransport> SpectrumDevice for SpectrumController<T> {
     }
 
     fn set_rgb(&mut self, config: RgbConfig) -> Result<(), CoreError> {
-        let packet = PacketEncoder::encode_rgb(&config);
-        self.transport.send_feature_report(packet.as_bytes())?;
+        // 1. Send Command 0x14: Program active LED color nibbles into mouse hardware color table
+        let led_pkt = PacketEncoder::encode_dpi_stage_led(0, &config.color)?;
+        self.transport.send_feature_report(led_pkt.as_bytes())?;
+
+        // Stabilization pause (matches OEM driver timing)
+        std::thread::sleep(std::time::Duration::from_millis(10));
+
+        // 2. Send Command 0x13: Configure RGB effect mode, speed, brightness, and flags
+        let rgb_pkt = PacketEncoder::encode_rgb(&config);
+        self.transport.send_feature_report(rgb_pkt.as_bytes())?;
+
+        // Stabilization pause
+        std::thread::sleep(std::time::Duration::from_millis(10));
+
+        // 3. Send Command 0x20: Save / commit configuration into onboard non-volatile EEPROM/flash
         let save_pkt = PacketEncoder::encode_save();
         self.transport.send_feature_report(save_pkt.as_bytes())?;
+
         self.cached_settings.rgb = config;
         StateManager::save_state(&self.cached_settings);
         info!("Applied and committed RGB configuration: {}", self.cached_settings.rgb.mode);
@@ -662,6 +676,18 @@ mod tests {
         controller.set_polling_rate(PollingRate::Hz500).unwrap();
         let updated = controller.get_settings().unwrap();
         assert_eq!(updated.polling_rate, PollingRate::Hz500);
+
+        // RGB change with dual-command sequence
+        let rgb_cfg = RgbConfig {
+            mode: RgbMode::StaticLight,
+            brightness: 3,
+            speed: 2,
+            color: RgbColor::new(255, 0, 0),
+            direction: false,
+            symmetry: true,
+        };
+        controller.set_rgb(rgb_cfg.clone()).unwrap();
+        assert_eq!(controller.cached_settings.rgb, rgb_cfg);
 
         controller.save_to_onboard().unwrap();
     }

@@ -39,13 +39,19 @@
           <label for="profileSelect">Profile:</label>
           <select id="profileSelect" class="styled-select"></select>
         </div>
-        <button id="btnSaveOnboard" class="btn btn-primary glow-button" title="Permanently write settings into mouse hardware memory">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+        <button id="btnSaveOnboard" class="btn btn-secondary" title="Permanently write settings into mouse hardware flash memory">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
             <polyline points="17 21 17 13 7 13 7 21"></polyline>
             <polyline points="7 3 7 8 15 8"></polyline>
           </svg>
-          Save to Mouse
+          Save Flash
+        </button>
+        <button id="btnApplyReplug" class="btn btn-primary glow-button" title="Write settings to mouse flash and launch guided hardware reset for instant activation">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+          Apply & Activate
         </button>
       </div>
     </header>
@@ -281,6 +287,88 @@
         </button>
       </div>
     </footer>
+  </div>
+
+  <!-- Interactive Replug Guide Modal -->
+  <div id="replugModal" class="modal-backdrop hidden">
+    <div class="modal-card glass-modal">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge warning" id="modalIconBadge">
+            <svg id="modalIconSvg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+          </div>
+          <div>
+            <h3 id="modalTitle">Settings Written to Flash</h3>
+            <p id="modalSubtitle" class="modal-sub">Perform a quick 4-second USB replug to activate changes in hardware</p>
+          </div>
+        </div>
+        <button id="modalCloseBtn" class="modal-close-icon" title="Close modal">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="stepper">
+          <div class="step-item completed" id="step1">
+            <div class="step-dot">✔</div>
+            <div class="step-content">
+              <div class="step-label">Flash Written</div>
+              <div class="step-desc">Settings committed</div>
+            </div>
+          </div>
+          <div class="step-divider active" id="div1"></div>
+          <div class="step-item active" id="step2">
+            <div class="step-dot" id="dot2">2</div>
+            <div class="step-content">
+              <div class="step-label">Unplug Mouse</div>
+              <div class="step-desc" id="step2Desc">Disconnect USB</div>
+            </div>
+          </div>
+          <div class="step-divider" id="div2"></div>
+          <div class="step-item" id="step3">
+            <div class="step-dot" id="dot3">3</div>
+            <div class="step-content">
+              <div class="step-label">Wait 4 Seconds</div>
+              <div class="step-desc" id="step3Desc">Discharge MCU</div>
+            </div>
+          </div>
+          <div class="step-divider" id="div3"></div>
+          <div class="step-item" id="step4">
+            <div class="step-dot" id="dot4">4</div>
+            <div class="step-content">
+              <div class="step-label">Replug & Boot</div>
+              <div class="step-desc" id="step4Desc">Boot new state</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-live-status">
+          <div class="status-animation-box pulsing" id="modalAnimBox">
+            <div class="usb-pulse-icon" id="modalUsbIcon">
+              <svg viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="7" y="2" width="10" height="20" rx="3"></rect>
+                <line x1="10" y1="2" x2="10" y2="7"></line>
+                <line x1="14" y1="2" x2="14" y2="7"></line>
+                <circle cx="12" cy="15" r="2"></circle>
+              </svg>
+            </div>
+            <div class="countdown-number hidden" id="countdownNumber">4</div>
+          </div>
+          <div class="status-instruction" id="modalInstruction">
+            Please unplug your mouse USB cable from your computer now.
+          </div>
+          <div class="hardware-note">
+            The Instant Micro MCU non-volatile flash activates new RGB registers upon cold USB power-up.
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="btnSkipReplug" class="btn btn-secondary">Done / Skip Guide</button>
+      </div>
+    </div>
   </div>
 
   <!-- Toast notification banner -->
