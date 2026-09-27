@@ -394,14 +394,14 @@ function setupEventListeners() {
     }
   });
 
-  // Apply & Save to Mouse Hardware
+  // Apply & Launch Hardware Replug Guide
   document.getElementById("btnApplyReplug").addEventListener("click", async () => {
     const btn = document.getElementById("btnApplyReplug");
     btn.disabled = true;
     try {
       await applyRgbForm();
       await postJson("/api/save", {});
-      showToast("✔ Applied & Saved to mouse hardware!");
+      openReplugModal();
     } finally {
       setTimeout(() => { btn.disabled = false; }, 800);
     }
