@@ -14,29 +14,31 @@ A fast, native Linux driver, CLI utility (`spectrumctl`), and modern glassmorphi
 
 ---
 
-## ⚡ Quick Start (Only 2 Commands!)
+## ⚡ Quick Start
 
 No complex setup required. After downloading or cloning, simply run:
 
 ```bash
 git clone https://github.com/nonbothack/Cosmic-Byte-Spectrum-Driver-Linux.git
-cd Cosmic-Byte-Spectrum-Driver-Linux && ./run-gui.sh
+cd Cosmic-Byte-Spectrum-Driver-Linux
+./run-gui.sh
 ```
 
 **That's it!** The driver auto-discovers your mouse and immediately opens the interactive Control Center in your browser at [`http://127.0.0.1:4567`](http://127.0.0.1:4567).
 
 ---
 
-## 🖥️ System & Desktop App Install (1 Command)
+## 🖥️ Desktop App Installation
 
-To install the desktop launcher and terminal commands globally on your machine:
+To permanently install the app icon into your system application launcher:
 
 ```bash
+cd Cosmic-Byte-Spectrum-Driver-Linux
 ./install.sh
 ```
 
 - Adds **"Cosmic Byte Spectrum Control Center"** to your Linux application menu (press Super / Windows key to search).
-- Installs `spectrum-gui` and `spectrumctl` to your PATH.
+- Installs `spectrum-gui` and `spectrumctl` to your PATH (no `sudo` needed).
 - Configures non-root udev access rules.
 
 ---
