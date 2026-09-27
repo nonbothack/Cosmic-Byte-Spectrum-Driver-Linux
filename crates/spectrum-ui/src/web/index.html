@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cosmic Byte Spectrum Control</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Ambient RGB Aura Background -->
+  <div class="rgb-aura" id="ambientAura"></div>
+
+  <div class="app-layout">
+    <!-- Header / Navbar -->
+    <header class="app-header">
+      <div class="brand-group">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2C8 2 5 5 5 10v4c0 5 3 8 7 8s7-3 7-8v-4c0-5-3-8-7-8z"></path>
+            <path d="M12 2v6"></path>
+            <path d="M9 12h6"></path>
+          </svg>
+        </div>
+        <div class="brand-meta">
+          <div class="brand-title">Cosmic Byte Spectrum</div>
+          <div class="brand-sub">RGB WIRED GAMING MOUSE &bull; LINUX CONTROL CENTER</div>
+        </div>
+      </div>
+
+      <div class="header-status">
+        <div class="status-pill" id="statusPill">
+          <span class="pulse-dot"></span>
+          <span id="statusText">CONNECTING...</span>
+        </div>
+        <div class="profile-dropdown-wrapper">
+          <label for="profileSelect">Profile:</label>
+          <select id="profileSelect" class="styled-select"></select>
+        </div>
+        <button id="btnSaveOnboard" class="btn btn-primary glow-button" title="Permanently write settings into mouse hardware memory">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          Save to Mouse
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Grid -->
+    <main class="main-grid">
+      <!-- Left Column: DPI & Polling -->
+      <div class="col-left">
+        <!-- DPI Engine Card -->
+        <section class="card glass-card dpi-card">
+          <div class="card-header">
+            <div class="header-left">
+              <span class="icon-wrap">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <line x1="12" y1="2" x2="12" y2="5"></line>
+                  <line x1="12" y1="19" x2="12" y2="22"></line>
+                  <line x1="2" y1="12" x2="5" y2="12"></line>
+                  <line x1="19" y1="12" x2="22" y2="12"></line>
+                </svg>
+              </span>
+              <h2>Sensor Resolution</h2>
+            </div>
+            <div class="dpi-badge"><span id="activeDpiValue">1600</span> <small>DPI</small></div>
+          </div>
+
+          <div class="dpi-slider-container">
+            <input type="range" id="dpiSlider" min="0" max="22" step="1" value="7" class="custom-range">
+            <div class="range-labels">
+              <span>200</span>
+              <span>800</span>
+              <span>1600</span>
+              <span>3200</span>
+              <span>6400</span>
+              <span>12800</span>
+            </div>
+          </div>
+
+          <!-- Quick presets -->
+          <div class="quick-presets">
+            <button class="preset-chip" data-dpi="400">400</button>
+            <button class="preset-chip" data-dpi="800">800</button>
+            <button class="preset-chip" data-dpi="1200">1200</button>
+            <button class="preset-chip" data-dpi="1600">1600</button>
+            <button class="preset-chip" data-dpi="2400">2400</button>
+            <button class="preset-chip" data-dpi="3200">3200</button>
+            <button class="preset-chip" data-dpi="6400">6400</button>
+          </div>
+
+          <!-- 6 DPI Stages Table -->
+          <div class="stages-section">
+            <div class="stages-title">DPI Switcher Stages</div>
+            <div class="stages-list" id="stagesContainer">
+              <!-- Dynamically populated stages -->
+            </div>
+          </div>
+        </section>
+
+        <!-- Polling Rate Card -->
+        <section class="card glass-card polling-card">
+          <div class="card-header">
+            <div class="header-left">
+              <span class="icon-wrap">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+              </span>
+              <h2>USB Report Rate (Polling)</h2>
+            </div>
+            <span class="rate-status" id="activeRateBadge">1000 Hz &bull; 1.0 ms</span>
+          </div>
+
+          <div class="polling-selector" id="pollingSelector">
+            <button class="polling-tile" data-rate="125">
+              <span class="tile-hz">125 Hz</span>
+              <span class="tile-ms">8.0 ms latency</span>
+            </button>
+            <button class="polling-tile" data-rate="250">
+              <span class="tile-hz">250 Hz</span>
+              <span class="tile-ms">4.0 ms latency</span>
+            </button>
+            <button class="polling-tile" data-rate="500">
+              <span class="tile-hz">500 Hz</span>
+              <span class="tile-ms">2.0 ms latency</span>
+            </button>
+            <button class="polling-tile active" data-rate="1000">
+              <span class="tile-hz">1000 Hz</span>
+              <span class="tile-ms">1.0 ms esports</span>
+            </button>
+          </div>
+        </section>
+      </div>
+
+      <!-- Right Column: RGB Chroma & Buttons -->
+      <div class="col-right">
+        <!-- RGB Lighting Card -->
+        <section class="card glass-card rgb-card">
+          <div class="card-header">
+            <div class="header-left">
+              <span class="icon-wrap rainbow-text">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+                </svg>
+              </span>
+              <h2>Chroma RGB Lighting (16 Modes)</h2>
+            </div>
+            <span class="current-mode-tag" id="currentModeTag">Neon Mode</span>
+          </div>
+
+          <div class="rgb-body">
+            <!-- Visual Mouse Schematic with Dynamic Glowing Zones -->
+            <div class="mouse-schematic-wrapper">
+              <div class="mouse-glow" id="mouseGlowHalo"></div>
+              <svg class="mouse-schematic" viewBox="0 0 200 320">
+                <!-- Outer Body -->
+                <path d="M100 15 C60 15 35 60 30 140 C25 210 40 290 100 295 C160 290 175 210 170 140 C165 60 140 15 100 15 Z" fill="#151926" stroke="#2a334a" stroke-width="3" />
+                <!-- Wheel -->
+                <rect x="94" y="55" width="12" height="38" rx="6" fill="#0d111a" stroke="#00f0ff" stroke-width="2" id="schematicWheel" />
+                <!-- Center Divider -->
+                <line x1="100" y1="15" x2="100" y2="50" stroke="#2a334a" stroke-width="2" />
+                <line x1="100" y1="95" x2="100" y2="135" stroke="#2a334a" stroke-width="2" />
+                <!-- DPI button -->
+                <rect x="95" y="105" width="10" height="15" rx="3" fill="#202738" stroke="#3b4866" stroke-width="1.5" />
+                <!-- RGB Side Strips -->
+                <path d="M38 120 C32 180 45 250 85 275" fill="none" stroke="#00f0ff" stroke-width="4" stroke-linecap="round" class="rgb-strip" id="rgbStripLeft" />
+                <path d="M162 120 C168 180 155 250 115 275" fill="none" stroke="#00f0ff" stroke-width="4" stroke-linecap="round" class="rgb-strip" id="rgbStripRight" />
+                <!-- Rear Logo Glow -->
+                <circle cx="100" cy="225" r="14" fill="#00f0ff" fill-opacity="0.8" class="logo-glow" id="schematicLogo" />
+              </svg>
+            </div>
+
+            <!-- RGB Controls -->
+            <div class="rgb-controls-panel">
+              <div class="form-row">
+                <label for="rgbModeSelect">Lighting Effect:</label>
+                <select id="rgbModeSelect" class="styled-select full-width">
+                  <!-- Populated dynamically -->
+                </select>
+              </div>
+
+              <div class="form-row color-picker-row">
+                <label>Effect Color:</label>
+                <div class="color-inputs">
+                  <input type="color" id="rgbColorInput" value="#00f0ff" class="color-swatch-picker">
+                  <input type="text" id="rgbHexInput" value="#00f0ff" class="hex-text-input">
+                </div>
+              </div>
+
+              <!-- Quick Palette -->
+              <div class="palette-swatches">
+                <button class="color-btn" data-color="#ff0055" style="--c:#ff0055"></button>
+                <button class="color-btn" data-color="#ff5500" style="--c:#ff5500"></button>
+                <button class="color-btn" data-color="#ffcc00" style="--c:#ffcc00"></button>
+                <button class="color-btn" data-color="#00ff66" style="--c:#00ff66"></button>
+                <button class="color-btn active" data-color="#00f0ff" style="--c:#00f0ff"></button>
+                <button class="color-btn" data-color="#7000ff" style="--c:#7000ff"></button>
+                <button class="color-btn" data-color="#ff00bb" style="--c:#ff00bb"></button>
+                <button class="color-btn" data-color="#ffffff" style="--c:#ffffff"></button>
+              </div>
+
+              <!-- Brightness & Speed Sliders -->
+              <div class="slider-group">
+                <div class="slider-item">
+                  <div class="slider-label">
+                    <span>Brightness</span>
+                    <span id="brightnessValText">Level 3</span>
+                  </div>
+                  <input type="range" id="brightnessSlider" min="1" max="5" value="3" class="custom-range">
+                </div>
+                <div class="slider-item">
+                  <div class="slider-label">
+                    <span>Animation Speed</span>
+                    <span id="speedValText">Level 3</span>
+                  </div>
+                  <input type="range" id="speedSlider" min="1" max="5" value="3" class="custom-range">
+                </div>
+              </div>
+
+              <!-- Effect direction & symmetry -->
+              <div class="toggle-row">
+                <label class="switch-wrap">
+                  <input type="checkbox" id="reverseToggle">
+                  <span class="switch-slider"></span>
+                  <span class="switch-label">Reverse Direction</span>
+                </label>
+                <label class="switch-wrap">
+                  <input type="checkbox" id="symmetryToggle" checked>
+                  <span class="switch-slider"></span>
+                  <span class="switch-label">Symmetry Flow</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Programmable Buttons Card -->
+        <section class="card glass-card buttons-card">
+          <div class="card-header">
+            <div class="header-left">
+              <span class="icon-wrap">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                  <line x1="12" y1="4" x2="12" y2="12"></line>
+                </svg>
+              </span>
+              <h2>Programmable Button Mapping</h2>
+            </div>
+            <button id="btnResetButtons" class="btn btn-secondary btn-sm">Reset Defaults</button>
+          </div>
+
+          <div class="buttons-grid" id="buttonsGrid">
+            <!-- Dynamically populated buttons -->
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-info">
+        <span>Device Node: <code id="deviceNode">/dev/hidraw5</code></span>
+        <span>VID:PID: <code>30fa:1440</code></span>
+        <span>Driver: <code>spectrum-hid (Kernel Native)</code></span>
+      </div>
+      <div class="footer-actions">
+        <button id="btnSyncHardware" class="btn btn-secondary btn-sm" title="Re-read registers from mouse">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+          </svg>
+          Sync from Mouse
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Toast notification banner -->
+  <div id="toast" class="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

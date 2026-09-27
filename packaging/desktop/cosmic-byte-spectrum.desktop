@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Cosmic Byte Spectrum Control Center
+GenericName=Gaming Mouse Configuration
+Comment=Configure DPI, Polling Rate, RGB lighting, and buttons for Cosmic Byte Spectrum mouse
+Exec=spectrum-gui
+Icon=cosmic-byte-spectrum
+Terminal=false
+Type=Application
+Categories=Settings;HardwareSettings;Utility;
+Keywords=mouse;gaming;dpi;rgb;spectrum;cosmic;byte;polling;
+StartupNotify=true

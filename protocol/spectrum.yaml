@@ -1,0 +1,133 @@
+version: 1
+
+device:
+  name: "Cosmic Byte Spectrum RGB Gaming Mouse"
+  sku: "TCBP03429"
+  ean: "8906107601954"
+  vendor_id: 0x30fa
+  product_id: 0x1440
+
+transport:
+  type: hid
+  mode: feature
+  report_id: 0x07
+  report_length: 8
+  interface: 1
+  usage_page: 0xff01
+  usage: 0x01
+
+dpi:
+  min: 200
+  max: 12800
+  max_stages: 6
+  steps:
+    1: 200
+    2: 400
+    3: 600
+    4: 800
+    5: 1000
+    6: 1200
+    7: 1400
+    8: 1600
+    9: 1800
+    10: 2000
+    12: 2400
+    13: 3200
+    14: 4000
+    15: 4800
+    16: 5600
+    17: 6400
+    18: 7200
+    19: 8000
+    20: 8800
+    21: 9600
+    22: 10400
+    23: 11200
+    24: 12800
+
+polling_rates:
+  125:
+    hw_code: 0x07
+    ui_code: 0
+  250:
+    hw_code: 0x03
+    ui_code: 1
+  500:
+    hw_code: 0x01
+    ui_code: 2
+  1000:
+    hw_code: 0x00
+    ui_code: 3
+
+rgb:
+  max_brightness: 4
+  max_speed: 4
+  modes:
+    1: "DPI Breathing"
+    2: "Cycle Breathing"
+    3: "Static Light"
+    4: "Flowing Water"
+    5: "Mono Water"
+    6: "Comet Streak"
+    7: "Neon"
+    8: "Ambilight"
+    9: "Flicker"
+    10: "Star Trek"
+    11: "Ripple"
+    12: "Enraptured"
+    13: "Button Response"
+    14: "LED Off"
+    15: "Single Breath"
+    16: "Cycle Color"
+
+buttons:
+  count: 6
+  mapping:
+    left:
+      hw_key: 1
+      default_action: 1
+    middle:
+      hw_key: 2
+      default_action: 2
+    right:
+      hw_key: 3
+      default_action: 3
+    forward:
+      hw_key: 5
+      default_action: 5
+    back:
+      hw_key: 4
+      default_action: 4
+    dpi_loop:
+      hw_key: 6
+      default_action: 6
+  actions:
+    0: "Disabled"
+    1: "Left Click"
+    2: "Middle Click"
+    3: "Right Click"
+    4: "Back"
+    5: "Forward"
+    6: "DPI Loop"
+    14: "Rapid Fire"
+    15: "LED Loop"
+    16: "DPI +"
+    17: "DPI -"
+    41: "Mode Loop"
+
+commands:
+  set_button:
+    command_id: 0x10
+    payload_length: 6
+  set_led:
+    command_id: 0x13
+    payload_length: 6
+  set_dpi_stage:
+    command_id: 0x14
+    payload_length: 6
+  set_active_stages:
+    command_id: 0x15
+    payload_length: 6
+  save_to_flash:
+    command_id: 0x20
+    payload_length: 6

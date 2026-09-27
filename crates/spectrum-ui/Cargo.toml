@@ -1,0 +1,23 @@
+[package]
+name = "spectrum-ui"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "spectrum-gui"
+path = "src/main.rs"
+
+[dependencies]
+spectrum-protocol = { path = "../spectrum-protocol" }
+spectrum-hid = { path = "../spectrum-hid" }
+spectrum-core = { path = "../spectrum-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+clap = { workspace = true }
+log = { workspace = true }
+env_logger = { workspace = true }
+anyhow = { workspace = true }
+
+[dev-dependencies]

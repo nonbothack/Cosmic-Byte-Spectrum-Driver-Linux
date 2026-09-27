@@ -1,0 +1,23 @@
+[package]
+name = "spectrum-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "spectrumctl"
+path = "src/main.rs"
+
+[dependencies]
+spectrum-protocol = { path = "../spectrum-protocol" }
+spectrum-hid = { path = "../spectrum-hid" }
+spectrum-core = { path = "../spectrum-core" }
+clap = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+env_logger = { workspace = true }
+log = { workspace = true }
+anyhow = { workspace = true }
+
+[dev-dependencies]

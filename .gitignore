@@ -1,0 +1,8 @@
+/target/
+.re/
+re/extracted/
+re/installer/
+*.exe
+__MACOSX/
+.DS_Store
+*.log

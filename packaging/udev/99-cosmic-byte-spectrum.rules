@@ -1,0 +1,6 @@
+# Udev rules for Cosmic Byte Spectrum RGB Wired Gaming Mouse
+# SKU: TCBP03429 / EAN: 8906107601954
+# USB VID: 0x30fa, PID: 0x1440
+
+# Grant unprivileged local users access to the vendor HID control node
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="30fa", ATTRS{idProduct}=="1440", MODE="0660", TAG+="uaccess"
